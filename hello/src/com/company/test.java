@@ -28,7 +28,7 @@ class Rectangle extends TwoDimensionalShape {
     }
 
     public String toString() {
-        return "Rectangle of dimensions " + width + " x " + height;
+        return "Rectangle of vvv dimensions " + width + " x " + height;
     }
 }
 class Circle extends TwoDimensionalShape {
