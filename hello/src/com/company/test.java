@@ -1,6 +1,5 @@
 package com.company;
 
-import java.awt.*;
 abstract class TwoDimensionalShape {
 
     public TwoDimensionalShape() {
@@ -61,13 +60,13 @@ class Triangle extends TwoDimensionalShape {
         z = tz;
     }
 
-    void toString(){
-        System.out.println( "\n\n\nThis is asdf" + x + y + z );
+    public String toString(){
+        return "\n\n\nThis is asdf" + x + y + z ;
     }
 
     int getLongestSide(){
         int max;
-        max = Math.max(x, y)
+        max = Math.max(x, y);
         if(z >= max){
             max = z;
         }
