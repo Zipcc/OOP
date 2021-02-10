@@ -1,7 +1,9 @@
 package com.company;
 
 class Circle extends TwoDimensionalShape {
+
     int radius;
+
 
     public Circle(int r) {
         radius = r;
@@ -18,4 +20,13 @@ class Circle extends TwoDimensionalShape {
     public String toString() {
         return "Circle withvvvvvvvvv radius " + radius;
     }
+
+    void setColour(Colour colour){
+        this.colour = colour;
+    }
+
+    Colour getColour(){
+        return this.colour;
+    }
+
 }

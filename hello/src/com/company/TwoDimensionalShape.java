@@ -2,11 +2,7 @@ package com.company;
 
 abstract class TwoDimensionalShape {
 
-    private Colour colour;
-
-    {
-        colour = Colour.RED;
-    }
+    static Colour colour = Colour.RED;
 
     public TwoDimensionalShape() {
     }
@@ -14,6 +10,7 @@ abstract class TwoDimensionalShape {
     void setColour(Colour colour){
         this.colour = colour;
     }
+
     Colour getColour(){
         return this.colour;
     }
