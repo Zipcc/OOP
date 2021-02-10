@@ -2,7 +2,7 @@ package com.company;
 
 abstract class TwoDimensionalShape {
 
-    static Colour colour = Colour.RED;
+     Colour colour = Colour.RED;
 
     public TwoDimensionalShape() {
     }
