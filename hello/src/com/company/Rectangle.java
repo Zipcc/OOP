@@ -20,4 +20,13 @@ class Rectangle extends TwoDimensionalShape {
     public String toString() {
         return "Rectangle of vvv dimensions " + width + " x " + height;
     }
+
+    void setColour(Colour colour){
+        this.colour = colour;
+    }
+
+    Colour getColour(){
+        return this.colour;
+    }
+
 }
