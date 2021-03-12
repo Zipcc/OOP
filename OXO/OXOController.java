@@ -19,8 +19,8 @@ class OXOController
         }
     }
 
-    public void handleIncomingCommand(String command) throws OXOMoveException {
-
+    public void handleIncomingCommand(String command) throws OXOMoveException
+    {
         if(gameModel.getWinner() != null){
             return;
         }
@@ -44,8 +44,8 @@ class OXOController
         }
     }
 
-    boolean scanCells(int winThreshold){
-
+    boolean scanCells(int winThreshold)
+    {
         boolean notFull = false;
 
         for(int i=0; i<gameModel.getNumberOfRows(); i++){
@@ -64,8 +64,8 @@ class OXOController
         return false;
     }
 
-    boolean isWin(int rowNum, int colNum, int winThreshold){
-
+    boolean isWin(int rowNum, int colNum, int winThreshold)
+    {
         //vertical
         int flag = 0;
         for(int i = rowNum - (winThreshold - 1); i <= rowNum + (winThreshold - 1); i++){
@@ -134,15 +134,15 @@ class OXOController
         return false;
     }
 
-    void identifierLength(String command) throws InvalidIdentifierLengthException{
-
+    void identifierLength(String command) throws InvalidIdentifierLengthException
+    {
         if(command.length() != 2){
             throw new InvalidIdentifierLengthException(command, command.length());
         }
     }
 
-    void identifierCharacter(String command) throws InvalidIdentifierCharacterException{
-
+    void identifierCharacter(String command) throws InvalidIdentifierCharacterException
+    {
         char row,col;
 
         row = Character.toLowerCase(command.charAt(0));
@@ -154,8 +154,8 @@ class OXOController
         }
     }
 
-    void outsideCellRange(int rowNum, int colNum) throws OutsideCellRangeException{
-
+    void outsideCellRange(int rowNum, int colNum) throws OutsideCellRangeException
+    {
         if(rowNum < 0 || rowNum >= gameModel.getNumberOfRows()){
             throw new OutsideCellRangeException(rowNum, colNum, RowOrColumn.ROW);
         }else if(colNum < 0 || colNum >= gameModel.getNumberOfColumns()){
@@ -163,8 +163,8 @@ class OXOController
         }
     }
 
-    void cellAlreadyTaken (int rowNum, int colNum, String command) throws CellAlreadyTakenException {
-
+    void cellAlreadyTaken (int rowNum, int colNum, String command) throws CellAlreadyTakenException
+    {
         if(gameModel.getCellOwner(rowNum, colNum) != null){
             throw new CellAlreadyTakenException(rowNum, colNum, command);
         }

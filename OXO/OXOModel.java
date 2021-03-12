@@ -32,9 +32,7 @@ class OXOModel
 
     public void addPlayer(OXOPlayer player)
     {
-
             players.add(player);
-
     }
 
     public OXOPlayer getPlayerByNumber(int number)
