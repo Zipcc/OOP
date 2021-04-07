@@ -15,7 +15,7 @@ public class UseCMD extends DBcmd{
         if(io.openFolder(getDBname())){
             setQuery("[OK]");
         }else{
-            setQuery("[ERROR] : Unknown database");
+            setQuery("[ERROR] :Unknown database");
         }
     }
 

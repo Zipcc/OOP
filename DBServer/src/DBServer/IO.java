@@ -6,9 +6,6 @@ import java.util.*;
 public class IO {
 
     private static String currentFolder;
-    private static String currentFile;
-
-
 
     public boolean createFolder(String folderName) {
 
@@ -30,6 +27,7 @@ public class IO {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
         }
         return false;
@@ -54,23 +52,26 @@ public class IO {
             return false;
         }
         if(folderToDelete.list() == null){
-            folderToDelete.delete();
+            if(!folderToDelete.delete()){
+                return false;
+            }
             System.out.println("Delete ---> "+ folderToDelete);
             return true;
-        }else{
-            File[] files = folderToDelete.listFiles();
+        }
+        File[] files = folderToDelete.listFiles();
+        if (files != null) {
             for(File file: files){
                 if(!file.delete()){
                     return false;
                 }
                 System.out.println("Delete ---> "+ file.getName());
             }
-            if(!folderToDelete.delete()){
-                return false;
-            }
-            System.out.println("Delete ---> "+ folderToDelete.getName());
-            return true;
         }
+        if(!folderToDelete.delete()){
+            return false;
+        }
+        System.out.println("Delete ---> "+ folderToDelete.getName());
+        return true;
     }
 
     // If file not exist, return false.
@@ -110,7 +111,7 @@ public class IO {
                 // Ignore attribute "id" input from file as new table has one itself.
                 System.out.println("Row input from file --> " + bufferLine);
                 table.insertColumns(arrayList);
-                // Following rows...
+                // Value rows...
                 while((bufferLine = br.readLine()) != null){
                     System.out.println("Row input from file --> " + bufferLine);
                     arrayList.clear();

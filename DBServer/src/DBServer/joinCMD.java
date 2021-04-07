@@ -18,6 +18,7 @@ public class joinCMD extends DBcmd{
         Table jointTable = new Table("jointTable");
         List<String> jointColNames = new ArrayList<>();
         List<String> jointValues = new ArrayList<>();
+
         // Input source tables.
         if((leftTable = io.inputFile(getTableNames().get(0))) == null || (rightTable = io.inputFile(getTableNames().get(1))) == null){
             setQuery("[ERROR]: Table does not exist");

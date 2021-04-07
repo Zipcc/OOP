@@ -4,9 +4,6 @@ import java.util.Set;
 
 public class deleteCMD extends DBcmd{
 
-    private Table table;
-    private Set<Integer> selectedIds;
-
     String query() {
 
         delete();
@@ -18,6 +15,7 @@ public class deleteCMD extends DBcmd{
         Table table;
         IO io = new IO();
         String tableName = getTableNames().get(0);
+        Set<Integer> selectedIds;
 
         if((table = io.inputFile(tableName)) == null){
             setQuery("[ERROR]: Table does not exist");

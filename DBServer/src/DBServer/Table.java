@@ -7,8 +7,8 @@ public class Table {
     private final String tableName;
     private int rowNum,colNum;
     private int maxId;
-    private Row columnNames;
-    private ArrayList<Row> valueRows;
+    private final Row columnNames;
+    private final ArrayList<Row> valueRows;
 
     public String getTableName() {
         return tableName;
@@ -31,20 +31,23 @@ public class Table {
     public int insertColumns(List<String> colNames){
 
         int i = 0;
-        if(!colNames.isEmpty()){
-            for(String name : colNames)
-                if(!columnNames.getValueList().contains(name)){
-                    columnNames.getValueList().add(name);
-                    i++;
-                    System.out.println("Column inserted --> " + name);
-                }
-            if(valueRows.size() > 0) {
-                for (Row row : valueRows) {
-                    row.setValue(colNum, " ");
-                }
-            }
-            colNum += i;
+
+        if(colNames.isEmpty()){
+            return i;
         }
+        for(String name : colNames) {
+            if (!columnNames.getValueList().contains(name)) {
+                columnNames.getValueList().add(name);
+                i++;
+                System.out.println("Column inserted --> " + name);
+            }
+        }
+        if(valueRows.size() > 0) {
+            for (Row row : valueRows) {
+                row.setValue(colNum, " ");
+            }
+        }
+        colNum += i;
         return i;
     }
 
@@ -104,9 +107,7 @@ public class Table {
 
     public List<Row> getValueRows(){
 
-        List<Row> list = new ArrayList<>();
-        list.addAll(valueRows);
-        return list;
+        return new ArrayList<>(valueRows);
     }
 
     public Row getRow(int index){
@@ -128,6 +129,7 @@ public class Table {
         for(Row row: valueRows){
             sb.append(row);
         }
+        sb.deleteCharAt(sb.length()-1);
         return sb.toString();
     }
 }

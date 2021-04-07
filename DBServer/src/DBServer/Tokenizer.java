@@ -10,14 +10,14 @@ public class Tokenizer {
     Tokenizer(String incomingCommand) {
 
         Commands = new ArrayList<>();
-        StringTokenizer st = new StringTokenizer(preProcess(incomingCommand));
-        // Store roughly split command strings into Commands for further tokenization.
+        StringTokenizer st = new StringTokenizer(preprocessCommand(incomingCommand));
+        // Store command tokens into Commands for further tokenization.
         while (st.hasMoreTokens()) {
             Commands.add(st.nextToken("\t"));
         }
     }
 
-// If no more token in Commands, return an extra null token.
+    // If no more token in Commands, return an extra null token.
     public Token nextToken() {
 
         if(index < Commands.size()){
@@ -25,11 +25,12 @@ public class Tokenizer {
             index++;
             return token;
         }else{
+            index++;
             return new Token("");
         }
     }
 
-// Set index pointing to the previous token.
+    // Set index pointing to the previous token.
     public void withDraw(){
 
         if(index > 1){
@@ -37,25 +38,28 @@ public class Tokenizer {
         }
     }
 
-// Roughly split the command string with whitespace.
-    private String preProcess(String s){
+    // Roughly preprocess command string with tab.
+    // Retain whitespaces inside quotes.
+    private String preprocessCommand(String command){
 
-        // Whether the index is entering the quote field.
-        boolean inQuote = false;
+        // Whether the index is inside the quote field.
+        boolean inQuotes = false;
         StringBuilder sb = new StringBuilder();
 
-        for(int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        for(int i = 0; i < command.length(); i++) {
+            char c = command.charAt(i);
             // Reverse inQuote flag once meet a quote.
             if (c == '\'') {
-                inQuote = !inQuote;
+                inQuotes = !inQuotes;
             }
-            // If outside the quote field, replace whitespaces/split punctuations and characters with tab.
-            if (!inQuote){
+            // If outside the quote field, replace whitespaces with tab, split punctuations and characters with tab.
+            if (!inQuotes){
+                // Split punctuations and characters
                 if(c=='('||c==')'||c==','||c==';'||c=='='||c=='<'||c=='>'||c=='!'||c=='*') {
                     sb.append('\t');
                     sb.append(c);
                     sb.append('\t');
+                // Replace whitespaces
                 }else if(c == ' '){
                     sb.append('\t');
                 }else{

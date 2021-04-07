@@ -5,7 +5,6 @@ import java.util.*;
 public class SelectCMD extends DBcmd{
 
     private Table table;
-    private Set<Integer> selectedIds;
 
     String query() {
 
@@ -20,21 +19,12 @@ public class SelectCMD extends DBcmd{
 
     private void selectAll(){
 
-        StringBuilder sb = new StringBuilder();
-
         if(selectRow()){
-            sb.append("[OK]\n");
-            sb.append(table.getRow(0));
-            for(Row r: table.getValueRows()){
-                sb.append(r);
-            }
-            setQuery(sb.toString());
+            setQuery("[OK]\n" + table.toString());
         }
     }
 
     private void selectCol(){
-
-        StringBuilder sb = new StringBuilder();
 
         if(selectRow()){
             // Get all column names
@@ -46,15 +36,10 @@ public class SelectCMD extends DBcmd{
                     return;
                 }
             }
-            sb.append("[OK]\n");
             for(String unexpectedNames:unexpectedCol){
                 table.deleteColumn(unexpectedNames);
             }
-            sb.append(table.getRow(0));
-            for(Row r: table.getValueRows()){
-                sb.append(r);
-            }
-            setQuery(sb.toString());
+            setQuery("[OK]\n" + table.toString());
         }
     }
 
@@ -63,15 +48,21 @@ public class SelectCMD extends DBcmd{
 
         IO io = new IO();
         String tableName = getTableNames().get(0);
+        Set<Integer> selectedIds;
 
         if((table = io.inputFile(tableName)) == null){
             setQuery("[ERROR]: Table does not exist");
             return false;
         }
         if(getConditions().size() >= 1){
-            selectedIds = calculateRPN(table);
+            try{
+                selectedIds = calculateRPN(table);
+            }catch (NumberFormatException e){
+                setQuery("[ERROR]: Attribute cannot be converted to number");
+                return false;
+            }
             if(selectedIds == null){
-                setQuery("[ERROR]: Wrong condition.");
+                setQuery("[ERROR]: Wrong condition");
                 return false;
             }
             for(Row r: table.getValueRows()) {

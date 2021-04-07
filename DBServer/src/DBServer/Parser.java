@@ -6,20 +6,20 @@ import static DBServer.TokenType.*;
 
 public class Parser {
 
-    private final Tokenizer tkn;
-    private Token tk;
+    private final Tokenizer tokenizer;
+    private Token token;
     private DBcmd cmd;
 
     Parser(String incomingCommand){
-        tkn = new Tokenizer(incomingCommand);
+        tokenizer = new Tokenizer(incomingCommand);
     }
 
     DBcmd parse() {
 
         try {
             nextToken();
-            if (checkType(CT)) {
-                switch (tk.getValue().toLowerCase(Locale.ROOT)) {
+            if (checkToken(CT)) {
+                switch (token.getValue().toLowerCase(Locale.ROOT)) {
                     case "create": create();break;
                     case "use"   : use();   break;
                     case "insert": insert();break;
@@ -32,106 +32,159 @@ public class Parser {
                 }
                 return cmd;
             }else {
-                throw new InvalidQueryException();
+                throw new InvalidQueryException("Need command");
             }
-        }catch(DBServerException e) {
-            if(e instanceof SemiColonMissingException){
-                return new ErrorCMD("no ;;;;;;;");
-            }
-            return new ErrorCMD("parse catched EXpt..");
+        }catch(ParserException e) {
+            return new ErrorCMD(e.toString());
         }
     }
 
     // Check current token type.
-    private boolean checkType(TokenType tt){
-        return tk.getType() == tt;
+    private boolean checkToken(TokenType tokenType){
+
+        return token.getType() == tokenType;
     }
 
     // Check current token value.
-    private boolean checkValue(String s){
-        return tk.getValue().equalsIgnoreCase(s);
+    private boolean checkToken(String value){
+
+        return token.getValue().equalsIgnoreCase(value);
     }
 
-    // Check whether value of the next token is equal to s.
+    // Check whether value of the next token is equal to value.
     // If not, throw exception.
-    private void checkSyntax(String s) throws DBServerException{
+    private void checkSyntax(String value) throws ParserException {
 
         nextToken();
-        if(!checkValue(s)){
-            throw new InvalidQueryException();
+        if(!checkToken(value)){
+            throw new InvalidQueryException("Need " + value);
         }
     }
 
-    // Check whether value of the next token is equal to s.
+    // Check whether type of the next token is equal to tt.
     // If not, throw exception.
-    private void checkSyntax(TokenType tt) throws DBServerException{
+    private void checkSyntax(TokenType tokenType) throws ParserException {
 
         nextToken();
-        if(!checkType(tt)){
-            throw new InvalidQueryException();
+        if(!checkToken(tokenType)){
+            throw new InvalidQueryException("Need" + tokenType);
         }
     }
 
     // Check whether a command misses a semicolon at the end
     // or attached with other invalid tokens;
-    private void checkEnd() throws DBServerException{
+    private void checkEnd() throws ParserException {
 
         nextToken();
-        if(checkType(NUL)){
-            throw new SemiColonMissingException();
-        }else if (!checkType(EOC)) {
+        if(checkToken(NUL)){
+            throw new InvalidQueryException("Semi colon missing at end of line");
+        }else if (!checkToken(EOC)) {
             throw new InvalidQueryException();
         }
     }
 
     // Get the next token in the tokenizer.
     private void nextToken(){
-        tk = tkn.nextToken();
+
+        token = tokenizer.nextToken();
     }
 
-    // Withdraw one step of nextToken().
+    // Take one step back of nextToken().
     private void stepBack(){
-        tkn.withDraw();
+
+        tokenizer.withDraw();
     }
 
-    private void tableName() throws DBServerException {
+    // If next token type is ID, add it into cmd.TableNames
+    private void tableName() throws ParserException {
 
         nextToken();
-        if(checkType(ID)) {
-            cmd.addTableName(tk.getValue());
+        if(checkToken(ID)) {
+            cmd.addTableName(token.getValue());
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need table name");
         }
     }
 
-    private void create() throws DBServerException{
+    // If next token type is ID, add it into cmd.ColNames
+    private void attribute() throws ParserException {
 
         nextToken();
-        if(checkType(ST)){
-            switch (tk.getValue().toLowerCase(Locale.ROOT)){
+        if(checkToken(ID)) {
+            cmd.addColName(token.getValue());
+        }else{
+            throw new InvalidQueryException("Need attribute");
+        }
+    }
+
+    // Return true if is a valid list.
+    private boolean list(String listType) throws ParserException {
+
+        switch (listType){
+            case "attribute"    : attribute();
+                                  break;
+            case "value"        : value();
+                                  break;
+            // Add name into cmd.ColNames, then add the pair value into cmd.ColNames.
+            case "nameValue"    : attribute();
+                                  checkSyntax("=");
+                                  value();
+                                  break;
+        }
+
+        nextToken();
+        if(checkToken(CM)){
+            return list(listType);
+        }else{
+            stepBack();
+        }
+        return true;
+    }
+
+    // If next token type is BOL/FLO/INT/STR, add it into cmd.ColNames
+    private void value() throws ParserException {
+
+        nextToken();
+        if(checkToken(BOL)||checkToken(FLO)||checkToken(INT)){
+            cmd.addColName(token.getValue());
+        }else if(checkToken(STR)){
+            if(token.getValue().length() == 2){
+                // Empty value: ''
+                cmd.addColName(" ");
+            }else{
+                // Decode string (Remove quotes).
+                cmd.addColName(token.getValue().replaceAll("'", ""));
+            }
+        }else{
+            throw new InvalidQueryException("Need value");
+        }
+    }
+
+    private void create() throws ParserException {
+
+        nextToken();
+        if(checkToken(ST)){
+            switch (token.getValue().toLowerCase(Locale.ROOT)){
                 case "database": createDatabase();break;
                 case "table"   : createTable();   break;
             }
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need structure");
         }
     }
 
-    private void createDatabase() throws DBServerException {
+    private void createDatabase() throws ParserException {
 
-        nextToken();
-        if(checkType(ID)){
-            cmd = new CreateCMD();
-            cmd.setCommandType("database");
-            cmd.setDBname(tk.getValue());
-        }else{
-            throw new InvalidQueryException();
-        }
+        cmd = new CreateCMD();
+        cmd.setCommandType("database");
+
+        checkSyntax(ID);
+        cmd.setDBname(token.getValue());
 
         checkEnd();
     }
 
-    private void createTable() throws DBServerException {
+    private void createTable() throws ParserException {
 
         cmd = new CreateCMD();
         cmd.setCommandType("table");
@@ -139,10 +192,8 @@ public class Parser {
         tableName();
 
         nextToken();
-        if(checkType(LB)){
-            if(!list("attribute")){
-                throw new InvalidQueryException();
-            }
+        if(checkToken(LB)){
+            list("attribute");
             checkSyntax(RB);
         }else{
             stepBack();
@@ -151,98 +202,46 @@ public class Parser {
         checkEnd();
     }
 
-    // Return true if is a valid list.
-    private boolean list(String listType) throws DBServerException{
+    private void use() throws ParserException {
 
-        switch (listType){
-            case "attribute"    : attribute();break;
-            case "value"        : value()    ;break;
-            case "nameValue"    : attribute(); checkSyntax("="); value();break;
-        }
+        cmd = new UseCMD();
 
-        nextToken();
-        if(checkType(CM)){
-            return list(listType);
-        }else{
-            stepBack();
-        }
-        return true;
-
-    }
-
-    private void attribute() throws DBServerException {
-
-        nextToken();
-        if(checkType(ID)) {
-            cmd.addColName(tk.getValue());
-        }else{
-            throw new InvalidQueryException();
-        }
-    }
-
-    private void value() throws DBServerException{
-
-        nextToken();
-        if(checkType(BOL)||checkType(FLO)||checkType(INT)){
-            cmd.addColName(tk.getValue());
-        }else if(checkType(STR)){
-            if(tk.getValue().length() == 2){
-                // Empty value: ''
-                cmd.addColName(" ");
-            }else{
-                // Decode string (Remove quotes).
-                cmd.addColName(tk.getValue().replaceAll("'", ""));
-            }
-        }else{
-            throw new InvalidQueryException();
-        }
-    }
-
-    private void use() throws DBServerException {
-
-        nextToken();
-        if(checkType(ID)){
-            cmd = new UseCMD();
-            cmd.setDBname(tk.getValue());
-        }else{
-            throw new InvalidQueryException();
-        }
+        checkSyntax(ID);
+        cmd.setDBname(token.getValue());
 
         checkEnd();
     }
 
-    private void insert() throws DBServerException{
+    private void insert() throws ParserException {
+
+        cmd = new InsertCMD();
 
         checkSyntax("into");
-        cmd = new InsertCMD();
 
         tableName();
 
         checkSyntax("values");
 
-        nextToken();
-        if(checkType(LB) && !list("value")){
-            throw new InvalidQueryException();
-        }
+        checkSyntax(LB);
+
+        list("value");
 
         checkSyntax(RB);
 
         checkEnd();
     }
 
-    private void select() throws DBServerException{
+    private void select() throws ParserException {
 
         cmd = new SelectCMD();
 
         nextToken();
-        if(checkType(WAL)){
+        if(checkToken(WAL)){
             cmd.setCommandType("all");
-        }else {
+        }else{
             cmd.setCommandType("some");
             stepBack();
-            if(!list("attribute")){
-                throw new InvalidQueryException();
-            }
+            list("attribute");
         }
 
         checkSyntax("from");
@@ -250,7 +249,7 @@ public class Parser {
         tableName();
 
         nextToken();
-        if(checkValue("where")){
+        if(checkToken("where")){
             conditionsRPN();
         }else {
             stepBack();
@@ -259,8 +258,8 @@ public class Parser {
         checkEnd();
     }
 
-    // Parse conditions into DBcmd.conditions List in RPN order.
-    private void conditionsRPN() throws DBServerException{
+    // Parse conditions into cmd.conditions List in RPN order.
+    private void conditionsRPN() throws ParserException {
 
         Stack<String> RelationStack = new Stack<>();
         // State points: Two conditions must combined with a relation(or/and).
@@ -269,11 +268,11 @@ public class Parser {
         // If relation == true && meetRB == true when meeting (, syntax right, reset meetRB and hasRelation to be false.
         boolean meetRB = false,hasRelation = false;
         nextToken();
-        while(! (checkType(EOC) || checkType(NUL)) ){
-            if(checkType(RB) && (meetRB = true)){
+        while(!( checkToken(EOC) || checkToken(NUL) )){
+            if(checkToken(RB) && (meetRB = true)){
                 // If RB has no pair LB, error
                 if(!RelationStack.contains("(")){
-                    throw new InvalidQueryException();
+                    throw new InvalidQueryException("Condition syntax wrong");
                 }
                 // Once meet ), pop all elements in stack till (
                 while(!RelationStack.peek().equals("(")){
@@ -283,16 +282,16 @@ public class Parser {
                 }
                 // Remove ( in the stack
                 RelationStack.pop();
-            }else if(checkType(LB)){
+            }else if(checkToken(LB)){
                 if(meetRB && !hasRelation){
-                    throw new InvalidQueryException();
+                    throw new InvalidQueryException("Condition syntax wrong");
                 }else{
-                    RelationStack.push(tk.getValue());
+                    RelationStack.push(token.getValue());
                     meetRB = false;
                     hasRelation = false;
                 }
-            }else if(checkValue("and") || checkValue("or")){
-                RelationStack.push(tk.getValue());
+            }else if(checkToken("and") || checkToken("or")){
+                RelationStack.push(token.getValue());
                 hasRelation = true;
             }else{
                 cmd.addCondition(singleCondition());
@@ -307,98 +306,92 @@ public class Parser {
                 cdt.setRelation(RelationStack.pop());
                 cmd.addCondition(cdt);
             }else{
-                throw new InvalidQueryException();
+                throw new InvalidQueryException("Condition syntax wrong");
             }
         }
         stepBack();
     }
 
     // Check and generate a new condition.
-    private Condition singleCondition() throws DBServerException{
+    private Condition singleCondition() throws ParserException {
 
         Condition cdt = new Condition();
 
-        if(checkType(ID)) {
-            cdt.setAttributeName(tk.getValue());
+        if(checkToken(ID)) {
+            cdt.setAttributeName(token.getValue());
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need attribute");
         }
 
         nextToken();
-        if(checkType(OP)) {
-            cdt.setOperator(tk.getValue());
+        if(checkToken(OP)) {
+            cdt.setOperator(token.getValue());
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need operator");
         }
-        if(checkValue("=") || checkValue("!")){
+        if(checkToken("=") || checkToken("!")){
             equalCondition(cdt);
-        }else if(checkValue("<") || checkValue(">")){
+        }else if(checkToken("<") || checkToken(">")){
             greaterCondition(cdt);
-        }else if(checkValue("like")){
+        }else if(checkToken("like")){
             likeCondition(cdt);
         }
         return cdt;
     }
 
     // == !=
-    private void equalCondition(Condition cdt) throws DBServerException{
+    private void equalCondition(Condition cdt) throws ParserException {
 
         checkSyntax("=");
 
         nextToken();
-        if(checkType(BOL)||checkType(FLO)||checkType(INT)){
-            cdt.setValue(tk.getValue());
-        }else if(checkType(STR)){
-            if(tk.getValue().length() == 2){
+        if(checkToken(BOL)||checkToken(FLO)||checkToken(INT)){
+            cdt.setValue(token.getValue());
+        }else if(checkToken(STR)){
+            if(token.getValue().length() == 2){
                 // Empty value: ''
                 cdt.setValue(" ");
             }else{
                 // Decode string (Remove quotes).
-                cdt.setValue(tk.getValue().replaceAll("'", ""));
+                cdt.setValue(token.getValue().replaceAll("'", ""));
             }
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need value");
         }
     }
 
     // < <= > >= must associate with numbers
-    private void greaterCondition(Condition cdt) throws DBServerException{
-
-        stepBack();
-        if(tk.getType() != FLO || tk.getType() != INT){
-            throw new InvalidQueryException();
-        }
-        nextToken();
+    private void greaterCondition(Condition cdt) throws ParserException {
 
         nextToken();
-        if(checkValue("=")){
+        if(checkToken("=")){
             cdt.addEqual();
         }else{
             stepBack();
         }
 
         nextToken();
-        if(checkType(FLO) || checkType(INT)){
-            cdt.setValue(tk.getValue());
+        if(checkToken(FLO) || checkToken(INT)){
+            cdt.setValue(token.getValue());
         } else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need number");
         }
     }
 
     // LIKE must associate with non-empty string
-    private void likeCondition(Condition cdt) throws DBServerException{
+    private void likeCondition(Condition cdt) throws ParserException {
 
         nextToken();
-        // > 2 because there shouldn't be empty inside ''
-        if(checkType(STR) && tk.getValue().length() > 2){
+        // length should > 2 because there shouldn't be empty inside ''
+        if(checkToken(STR) && token.getValue().length() > 2){
             // Decode string (Remove quotes).
-            cdt.setValue(tk.getValue().replaceAll("'", ""));
+            cdt.setValue(token.getValue().replaceAll("'", ""));
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("String expected");
         }
     }
 
-    private void update() throws DBServerException{
+    private void update() throws ParserException {
 
         cmd = new UpdateCMD();
 
@@ -406,38 +399,36 @@ public class Parser {
 
         checkSyntax("set");
 
-        if(!list("nameValue")){
-            throw new InvalidQueryException();
-        }
+        list("nameValue");
 
         checkSyntax("where");
         conditionsRPN();
         checkEnd();
     }
 
-    private void drop() throws DBServerException{
+    private void drop() throws ParserException {
 
         String structure;
+        cmd = new DropCMD();
 
         nextToken();
-        if(checkType(ST)){
-            cmd = new DropCMD();
-            structure = tk.getValue();
+        if(checkToken(ST)){
+            structure = token.getValue();
         }else{
-            throw new InvalidQueryException();
+            throw new InvalidQueryException("Need structure");
         }
 
         checkSyntax(ID);
 
         switch (structure.toLowerCase(Locale.ROOT)){
-            case "database": cmd.setCommandType("database");cmd.setDBname(tk.getValue())   ;break;
-            case "table"   : cmd.setCommandType("table")   ;cmd.addTableName(tk.getValue());break;
+            case "database": cmd.setCommandType("database");cmd.setDBname(token.getValue())   ;break;
+            case "table"   : cmd.setCommandType("table")   ;cmd.addTableName(token.getValue());break;
         }
 
         checkEnd();
     }
 
-    private void alter() throws DBServerException{
+    private void alter() throws ParserException {
 
         checkSyntax("table");
         cmd = new alterCMD();
@@ -445,9 +436,9 @@ public class Parser {
         tableName();
 
         nextToken();
-        if(checkValue("add")){
+        if(checkToken("add")){
             cmd.setCommandType("add");
-        }else if(checkValue("drop")){
+        }else if(checkToken("drop")){
             cmd.setCommandType("drop");
         }
 
@@ -456,7 +447,7 @@ public class Parser {
         checkEnd();
     }
 
-    private void delete() throws DBServerException{
+    private void delete() throws ParserException {
 
         checkSyntax("from");
         cmd = new deleteCMD();
@@ -470,7 +461,7 @@ public class Parser {
         checkEnd();
     }
 
-    private void join() throws DBServerException{
+    private void join() throws ParserException {
 
         cmd = new joinCMD();
 

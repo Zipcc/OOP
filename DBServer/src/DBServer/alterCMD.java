@@ -20,7 +20,7 @@ public class alterCMD extends DBcmd{
         IO io = new IO();
         String tableName = getTableNames().get(0);
         Table table;
-        setQuery("[ERROR] : failed to alter attribute.");
+        setQuery("[ERROR]: Failed to alter attribute.");
 
         if((table = io.inputFile(tableName)) != null){
             if (addOrDrop && add(table) || !addOrDrop && drop(table)) {

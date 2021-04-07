@@ -4,9 +4,6 @@ import java.util.*;
 
 public class UpdateCMD extends DBcmd{
 
-    private Table table;
-    private Set<Integer> selectedIds;
-
     String query() {
 
         update();
@@ -19,7 +16,9 @@ public class UpdateCMD extends DBcmd{
         String tableName = getTableNames().get(0);
         List<String> name  = new ArrayList<>();
         List<String> value = new ArrayList<>();
+        Set<Integer> selectedIds;
         int index;
+        Table table;
 
         if((table = io.inputFile(tableName)) == null){
             setQuery("[ERROR]: Table does not exist");
@@ -30,11 +29,12 @@ public class UpdateCMD extends DBcmd{
             name.add(getColNames().get(i));
             value.add(getColNames().get(i+1));
         }
-
+        // Handle conditions
         if(getConditions().isEmpty() || (selectedIds = calculateRPN(table)) == null ){
             setQuery("[ERROR]: Wrong condition.");
             return;
         }
+        // Find column index and update values in value rows
         for(int i = 0; i < name.size(); i++){
             index = table.getRow(0).getValueList().indexOf(name.get(i));
             if(index == -1){

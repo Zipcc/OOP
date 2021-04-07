@@ -4,9 +4,9 @@ import java.util.*;
 
 public abstract class DBcmd {
 
-    private List<String> colNames;
-    private List<String> tableNames;
-    private List<Condition> conditions;
+    private final List<String> colNames;
+    private final List<String> tableNames;
+    private final List<Condition> conditions;
     private String DBname;
     private String commandType;
     private String query;
@@ -76,10 +76,10 @@ public abstract class DBcmd {
             if (condition.isRelation() && stack.size() >= 2) {
                 Set<Integer> set1 = stack.pop();
                 Set<Integer> set2 = stack.pop();
-                if (condition.getRelation().equalsIgnoreCase("and")) {
+                if (condition.getRelation().equals("and")) {
                     set1.retainAll(set2);
                     stack.push(set1);
-                } else if (condition.getRelation().equalsIgnoreCase("or")) {
+                } else if (condition.getRelation().equals("or")) {
                     set1.addAll(set2);
                     stack.push(set1);
                 }

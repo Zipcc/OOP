@@ -13,28 +13,16 @@ public class Condition {
     private String operator;
     private String value;
 
-    public String getAttributeName() {
-        return attributeName;
-    }
-
     public void setAttributeName(String attributeName) {
         this.attributeName = attributeName;
     }
 
-    public String getOperator() {
-        return operator;
-    }
-
     public void setOperator(String operator) {
-        this.operator = operator;
+        this.operator = operator.toLowerCase(Locale.ROOT);
     }
 
     public void addEqual(){
         operator = operator + "=";
-    }
-
-    public String getValue() {
-        return value;
     }
 
     public void setValue(String value) {
@@ -50,7 +38,7 @@ public class Condition {
     }
 
     public void setRelation(String relation) {
-        this.relation = relation;
+        this.relation = relation.toLowerCase(Locale.ROOT);
         this.isRelation = true;
     }
 
@@ -61,7 +49,7 @@ public class Condition {
         int colNameIndex = table.getRow(0).getValueList().indexOf(attributeName);
         Set<Integer> ids = null;
 
-        switch(operator.toLowerCase(Locale.ROOT)){
+        switch(operator){
             case "="  : ids = equal(table, colNameIndex, true);
                 break;
             case "!"  : ids = equal(table, colNameIndex, false);

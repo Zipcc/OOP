@@ -34,7 +34,7 @@ class Row {
         for (String s:valueList) {
             sb.append(s).append("\t");
         }
-        // Replace the last '\t' with '\n' .
+        // Replace the last '\t' with '\n'.
         sb.deleteCharAt(sb.length()-1);
         sb.append("\n");
         return sb.toString();

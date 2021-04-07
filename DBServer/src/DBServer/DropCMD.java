@@ -19,7 +19,7 @@ public class DropCMD extends DBcmd{
         if(io.deleteFolder(getDBname())){
             setQuery("[OK]");
         }else{
-            setQuery("[ERROR] : failed to delete database. Database doesn't exist?");
+            setQuery("[ERROR]: failed to delete database. Database doesn't exist?");
         }
     }
 
@@ -29,7 +29,7 @@ public class DropCMD extends DBcmd{
         if(io.deleteFile(getTableNames().get(0))){
             setQuery("[OK]");
         }else{
-            setQuery("[ERROR] : failed to delete table. Table doesn't exist?");
+            setQuery("[ERROR]: failed to delete table. Table doesn't exist?");
         }
     }
 }

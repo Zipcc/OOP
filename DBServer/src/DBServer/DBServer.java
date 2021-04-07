@@ -35,7 +35,7 @@ public class DBServer {
     {
         String incomingCommand = socketReader.readLine();
         System.out.println("Received message: " + incomingCommand);
-
+        // Parse incoming command.
         Parser ps = new Parser(incomingCommand);
 
         socketWriter.write(ps.parse().query());

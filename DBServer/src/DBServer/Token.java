@@ -6,8 +6,8 @@ public class Token {
 
     private TokenType type;
     private final String value;
-    static final String EOCregex = ";";
     static final String NULregex = "";
+    static final String EOCregex = ";";
     static final String CTregex  = "use|create|drop|alter|insert|select|update|delete|join";
     static final String STregex  = "database|table";
     static final String WALregex = "\\*";
@@ -32,7 +32,7 @@ public class Token {
     }
 
     // Check and set token type if token value matches regex
-    // If neither case below matches value, set to be UNK and return false.
+    // If value matches none case below, set type to be UNK and return false.
     private Boolean setType(TokenType type){
 
         String regex;
@@ -52,14 +52,14 @@ public class Token {
             case FLO:  regex = FLOregex;break;
             case INT:  regex = INTregex;break;
             case OP :  regex = OPregex; break;
-            case ID :  regex = IDregex ;break;
+            case ID :  regex = IDregex; break;
             default :  regex = null;    break;
         }
         // whether matches one Token Type.
         if(regex != null && value.toLowerCase(Locale.ROOT).matches(regex)){
             this.type = type;
             return true;
-        // If matches none of previous ones, set to be UNKNOWN.
+        // If matches none of previous ones, set type to be UNKNOWN.
         }else{
             this.type = TokenType.UNK;
             return false;

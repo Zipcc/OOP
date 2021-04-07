@@ -20,7 +20,7 @@ package DBServer;
 * ID  : <TableName> | <DatabaseName> | <AttributeName>
 *
 * Sequence is essential, as in Token(String token) CT,ST,KW,OP should be checked before ID.
-* */
+*/
 public enum TokenType {
-    NUL, UNK, EOC, CT, ST, WAL, LB, RB, CM, KW, STR, BOL, FLO, INT, OP, ID;
+    NUL, UNK, EOC, CT, ST, WAL, LB, RB, CM, KW, STR, BOL, FLO, INT, OP, ID
 }
